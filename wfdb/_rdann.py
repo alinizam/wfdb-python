@@ -145,7 +145,7 @@ def snip_arrays(annsamp,anntype,num,subtype,chan,aux,ai):
     aux = aux[0:ai]
     return annsamp,anntype,num,subtype,chan,aux
 
-def rdann(recordname, annot, sampfrom=0, sampto=[], anndisp=1):
+def rdann(recordname: object, annot: object, sampfrom: object = 0, sampto: object = [], anndisp: object = 1) -> object:
     """ Read a WFDB annotation file recordname.annot and return the fields as lists or arrays
 
     Usage: annsamp, anntype, num, subtype, chan, aux, annfs = rdann(recordname, annot, 

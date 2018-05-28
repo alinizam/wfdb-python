@@ -16,17 +16,20 @@ from scipy.signal import freqz
 
 import numpy as np
 from wfdb import rdsamp
+# Örnek verilerin yüklenmesi
 sig, fields=rdsamp('sampledata/100')
 print(sig)
-#np.savetxt('c:\\data\\100.txt', sig)
-#print(sig.shape)
-#print(fields)
 
 from wfdb import plotwfdb
 
-#plotwfdb.plotsigs(sig, fields)
+# Orjinal işaret çizimi
+plt.figure(1)
+plt.subplot(411)
+plt.plot(sig[1:2500,1])
+plt.ylabel('orjinal')
 
 
+#Filtreleme kısmı
 def butter_bandpass(lowcut, highcut, fs, order=5):
     nyq = 0.5 * fs
     low = lowcut / nyq
@@ -39,27 +42,16 @@ def butter_bandpass_filter(data, lowcut, highcut, fs, order=5):
     y = lfilter(b, a, data)
     return y
 
-plt.figure(1)
-plt.subplot(411)
-plt.plot(sig[1:2500,1])
-plt.ylabel('some numbers')
-
-
 b, a = signal.butter(50, .25, 'high')
-#print(b)
 
 fs = 120.0
 lowcut = 1
 highcut = 30.0
 
-
 T = 0.05
 nsamples = T * fs
 t = np.linspace(0, T, nsamples, endpoint=False)
-filteredSignal = butter_bandpass_filter(sig[:,1], lowcut, highcut, fs, order=6)
-
-
-
+filteredSignal = butter_bandpass_filter(sig[:,1], lowcut, highcut, fs, order=4)
 
 print("ecgrecord1")
 import wfdb
@@ -72,36 +64,35 @@ print(annotation[0])
 plt.subplot(412)
 plt.plot(filteredSignal[0:2500], label='Derivative of (%g Hz)' )
 plt.plot(annotation[0], np.zeros_like(annotation[0]) + 0, 'ro')
-#plt.plot(annotation[0])
-#wfdb.plotrec(record, annotation = annotation, title='Record 100 from MIT-BIH Arrhythmia Database', timeunits = 'seconds')
+plt.ylabel('Filtre ve MITBIH R')
 
 
 
-#from qrs._detect import qrs_detector
-
-#resultlist=qrs_detector(ecgrecord)
-
-
+#Deneme amaçlı birinci türev çizimi
 plt.subplot(413)
-g = abs(np.gradient(filteredSignal,2))
+g = np.gradient(filteredSignal,1)
 plt.plot(g[0:2500], label='Derivative of (%g Hz)' )
+plt.ylabel('Birinci türev')
 
+
+
+#R tepesi bulma 3 örnek arası eğim-türev yaklaşımı
 
 end = 20
 ok = 1
 m = []
 index = end
 while (index<10000):
-    ortOn = np.average(g[index-10:index ]);
-    ortSon= np.average(g[index:index + 10]);
-
-    if ortSon >= 3*ortOn:
-        init = index
-        m.append(init+ np.argmax(g[init:init+50]))
-        index += 50
+    if  (filteredSignal[index]-filteredSignal[index-3])*(filteredSignal[index+3]-filteredSignal[index])<0:
+        m.append(filteredSignal[index])
+    else:
+        m.append(0)
     index+=1
-print(m)
-#plt.plot(m[0:2500], np.zeros_like(m[0:2500]) + 0, 'ro')
-plt.plot(g[0:2500], label='Derivative of (%g Hz)' )
+print(filteredSignal[60:85])
+print(m[40:65])
 
+plt.subplot(414)
+plt.plot(m[0:2500], label='ECG tepeleri' )
+plt.ylabel('Bulunan tepeler')
+# Tepeler bir eşikle ayıklanacaktır. O kısım henüz yapılmamıştır.
 plt.show()
